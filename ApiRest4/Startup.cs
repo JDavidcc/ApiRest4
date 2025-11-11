@@ -21,8 +21,9 @@ namespace ApiRest4
         public void ConfigureServices(IServiceCollection services)
         {
             var cadenaConexionSqlConfiguracion = new AccesoDatos(Configuration.GetConnectionString("SQL"));
+            services.AddSingleton(cadenaConexionSqlConfiguracion);
 
-            services.AddSingleton<IProductosEnMemoria, ProductosEnMemoria>();
+            services.AddSingleton<IProductosEnMemoria, ProductosSQLServer>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {

@@ -42,7 +42,6 @@ namespace ApiRest4.Controllers
         {
             Producto producto = new Producto
             {
-                Id = repositorio.DameProductos().Max(x => x.Id) + 1,
                 Nombre = p.Nombre,
                 Descripcion = p.Descripcion,
                 Precio = p.Precio,
