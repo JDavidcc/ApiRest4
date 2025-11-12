@@ -1,7 +1,6 @@
 ﻿using ApiRest4.Modelo;
 using System;
 using System.Collections.Generic;
-//using System.Data.SqlClient;
 using Microsoft.Data.SqlClient;
 using ApiRest4.Repositorio;
 using System.Runtime.CompilerServices;
@@ -9,11 +8,9 @@ using System.Data;
 
 namespace ApiRest4.Repositorio
 {
-    
     public class ProductosSQLServer : IProductosEnMemoria
     {
         private string CadenaConexion;
-
         public ProductosSQLServer(AccesoDatos cadenaConexion)
         {
             CadenaConexion = cadenaConexion.CadenaConexionSQL;
@@ -28,39 +25,22 @@ namespace ApiRest4.Repositorio
         }
         public void CrearProducto(Producto p)
         {
-            Console.WriteLine("=== INICIO CrearProducto ===");
-            Console.WriteLine($"CadenaConexion: {CadenaConexion}");
-
             SqlConnection sqlConexion = conexion();
-            Console.WriteLine($"sqlConexion == null ? {sqlConexion == null}");
-
             SqlCommand Comm = null;
-
             try
             {
-                Console.WriteLine("Intentando abrir la conexión...");
                 sqlConexion.Open();
-                Console.WriteLine("Conexión abierta correctamente.");
-
-                Console.WriteLine("Creando comando...");
                 Comm = sqlConexion.CreateCommand();
-                Console.WriteLine("Comando creado correctamente.");
-
                 Comm.CommandText = "dbo.ProductosAlta";
                 Comm.CommandType = CommandType.StoredProcedure;
                 Comm.Parameters.Add("@Nombre", SqlDbType.VarChar, 500).Value = p.Nombre;
                 Comm.Parameters.Add("@Descripcion", SqlDbType.VarChar, 5000).Value = p.Descripcion;
                 Comm.Parameters.Add("@Precio", SqlDbType.Float).Value = p.Precio;
                 Comm.Parameters.Add("@SKU", SqlDbType.VarChar, 100).Value = p.SKU;
-
-                Console.WriteLine("Ejecutando procedimiento almacenado...");
                 Comm.ExecuteNonQuery();
-
-                Console.WriteLine("Procedimiento ejecutado correctamente.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("❌ ERROR: " + ex);
                 throw;
             }
             finally
@@ -68,18 +48,89 @@ namespace ApiRest4.Repositorio
                 Comm?.Dispose();
                 sqlConexion?.Close();
                 sqlConexion?.Dispose();
-                Console.WriteLine("=== FIN CrearProducto ===");
             }
         }
 
         public Producto DameProducto(string SKU)
         {
-            throw new NotImplementedException();
+            SqlConnection sqlConexion = conexion();
+            SqlCommand Comm = null;
+            Producto p = null;
+            try
+            {
+                sqlConexion.Open();
+                Comm = sqlConexion.CreateCommand();
+                Comm.CommandText = "dbo.Productos_Obtener";
+                Comm.CommandType = CommandType.StoredProcedure;
+                Comm.Parameters.Add("@SKU", SqlDbType.VarChar, 100).Value = SKU;
+                SqlDataReader reader= Comm.ExecuteReader();
+                if (reader.Read())
+                {
+                    p = new Producto
+                    {
+                        Nombre = reader["Nombre"].ToString(),
+                        Descripcion = reader["Descripcion"].ToString(),
+                        Precio = Convert.ToDouble(reader["Precio"].ToString()),
+                        SKU = reader["SKU"].ToString()
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("=================Se produjo un error al dar de alta: " + ex);
+                throw;
+            }
+            finally
+            {
+                Comm?.Dispose();
+                sqlConexion?.Close();
+                sqlConexion?.Dispose();
+            }
+            return p;
         }
 
         public IEnumerable<Producto> DameProductos()
         {
-            throw new NotImplementedException();
+            SqlConnection sqlConexion = conexion();
+            SqlCommand Comm = null;
+            List<Producto> productos = new List<Producto>();
+            Producto p = null;
+            try
+            {
+                sqlConexion.Open();
+
+                Comm = sqlConexion.CreateCommand();
+                Console.WriteLine("Comando creado correctamente.");
+
+                Comm.CommandText = "dbo.Productos_Obtener";
+                Comm.CommandType = CommandType.StoredProcedure;
+                SqlDataReader reader = Comm.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    p = new Producto
+                    {
+                        Nombre = reader["Nombre"].ToString(),
+                        Descripcion = reader["Descripcion"].ToString(),
+                        Precio = Convert.ToDouble(reader["Precio"].ToString()),
+                        SKU = reader["SKU"].ToString()
+                    };
+                    productos.Add(p);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("=================Se produjo un error al dar de alta: " + ex);
+                throw;
+            }
+            finally
+            {
+                Comm?.Dispose();
+                sqlConexion?.Close();
+                sqlConexion?.Dispose();
+            }
+            return productos;
         }
 
         public void ModificarProducto(Producto p)

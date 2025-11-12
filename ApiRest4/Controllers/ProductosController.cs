@@ -30,10 +30,11 @@ namespace ApiRest4.Controllers
         public ActionResult<ProductoDTO> DameProducto(string codProducto)
         {
             var producto = repositorio.DameProducto(codProducto).convertirDTO();
-            if (producto == null)
+            if (producto is null)
             {
                 return NotFound();
             }
+
             return producto;
         }
 
